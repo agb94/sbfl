@@ -2,6 +2,9 @@ import numpy as np
 from scipy.stats import rankdata
 from sklearn.preprocessing import binarize
 
+def filtering_mask(X, y):
+    return np.sum(X[y==0, :], axis=0) == 0
+
 def ranking(l, method='max'):
     return rankdata(-np.array(l), method=method)
 

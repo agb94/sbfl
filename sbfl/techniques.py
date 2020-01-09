@@ -1,7 +1,7 @@
 import numpy as np
 from . import formula
 from .scaling import default_scale
-from .utils import matrix_to_index, simple_nn
+from .utils import matrix_to_index, simple_nn, filtering_mask
 
 def ochiai(X, y):
     return formula.ochiai(*matrix_to_index(X, y))
@@ -15,7 +15,7 @@ def dstar(X, y, star=2):
 def tarantula(X, y):
     return formula.tarantula(*matrix_to_index(X, y))
 
-def neural_network(X, y, model=None, epochs=100, preprocessor=None, verbose=False):
+def neural_network(X, y, model=None, epochs=50, preprocessor=None, verbose=False):
     import keras
     from keras.utils import np_utils
     from imblearn.over_sampling import RandomOverSampler
@@ -32,7 +32,7 @@ def neural_network(X, y, model=None, epochs=100, preprocessor=None, verbose=Fals
         from imblearn.over_sampling import RandomOverSampler
         from sklearn.preprocessing import maxabs_scale
         # Default Preprocessing
-        mask = np.sum(X[y==0, :], axis=0) == 0
+        mask = filtering_mask(X, y)
         if np.all(mask):
             return np.ma.array(np.zeros(mask.shape[0]), mask=mask)
         X = default_scale(X[:, ~mask])
