@@ -25,24 +25,22 @@ def neural_network(X, y, model=None, epochs=50, preprocessor=None, verbose=False
 
     if verbose:
         print("Original shape       -- X: {}, y: {}".format(X.shape, y.shape))
+  
+    # Default Preprocessing
+    mask = filtering_mask(X, y)
+    if np.all(mask):
+        return np.ma.array(np.zeros(mask.shape[0]), mask=mask)
     
     if preprocessor:
-        X, y = preprocessor(X, y)
+        X, y = preprocessor(X[:, ~mask], y)
     else:
         from imblearn.over_sampling import RandomOverSampler
         from sklearn.preprocessing import maxabs_scale
-        # Default Preprocessing
-        mask = filtering_mask(X, y)
-        if np.all(mask):
-            return np.ma.array(np.zeros(mask.shape[0]), mask=mask)
         X = default_scale(X[:, ~mask])
         X, y = RandomOverSampler(sampling_strategy=0.5).fit_resample(X, y)
     
     if verbose:
         print("After preprocessing  -- X: {}, y: {}".format(X.shape, y.shape))
-
-    if np.all(mask):
-        return scroes
 
     y = np_utils.to_categorical(y, 2)
     with keras.backend.tensorflow_backend.tf.device('/gpu:0'):
