@@ -1,7 +1,7 @@
 import numpy as np
 from . import formula
 from .scaling import default_scale
-from .utils import matrix_to_index, simple_nn, filtering_mask
+from .utils import matrix_to_index, simple_nn, filtering_mask, random_oversampler
 
 def ochiai(X, y):
     return formula.ochiai(*matrix_to_index(X, y))
@@ -15,40 +15,43 @@ def dstar(X, y, star=2):
 def tarantula(X, y):
     return formula.tarantula(*matrix_to_index(X, y))
 
-def neural_network(X, y, model=None, epochs=50, preprocessor=None, verbose=False):
+def neural_network(X, y, model=None, epochs=50, ratio=0.5, preprocessor=None, virtual_inputs=None, verbose=False, mask=None):
     import keras
     from keras.utils import np_utils
-    from imblearn.over_sampling import RandomOverSampler
-    from sklearn.preprocessing import maxabs_scale
-    X, y = np.array(X), np.array(y)
-    mask = np.ones(X.shape[1], dtype=bool)
 
+    X, y = np.array(X), np.array(y)
     if verbose:
         print("Original shape       -- X: {}, y: {}".format(X.shape, y.shape))
-  
-    # Default Preprocessing
-    mask = filtering_mask(X, y)
+
+    if mask is None:
+        # Default Preprocessing
+        mask = filtering_mask(X, y)
+
     if np.all(mask):
         return np.ma.array(np.zeros(mask.shape[0]), mask=mask)
-    
-    if preprocessor:
-        X, y = preprocessor(X[:, ~mask], y)
-    else:
-        from imblearn.over_sampling import RandomOverSampler
-        from sklearn.preprocessing import maxabs_scale
-        X = default_scale(X[:, ~mask])
-        X, y = RandomOverSampler(sampling_strategy=0.5).fit_resample(X, y)
-    
-    if verbose:
-        print("After preprocessing  -- X: {}, y: {}".format(X.shape, y.shape))
 
-    y = np_utils.to_categorical(y, 2)
+    if preprocessor:
+        res_X, res_y = preprocessor(X[:, ~mask], y)
+    else:
+        X = default_scale(X[:, ~mask])
+        res_X, res_y = random_oversampler(X, y, ratio=ratio)
+
+    if verbose:
+        print("After preprocessing  -- X: {}, y: {}".format(res_X.shape, res_y.shape))
+
+    res_y = np_utils.to_categorical(res_y, 2)
     with keras.backend.tensorflow_backend.tf.device('/gpu:0'):
         if model is None:
-            model = simple_nn(np.sum(~mask))
-        hist = model.fit(X, y, epochs=epochs, verbose=verbose)
-        virtual_inputs = np.identity(np.sum(~mask))
-        scores = np.ma.array(np.zeros(mask.shape[0]), mask=mask)
-        scores[~scores.mask] = model.predict(virtual_inputs)[:, 0]
-    
+            num_nodes = max(2, int(res_X.shape[1]/2))
+            print("# neurons in the hidden layer: {}".format(num_nodes))
+            model = simple_nn(np.sum(~mask), num_nodes=num_nodes)
+        hist = model.fit(res_X, res_y, epochs=epochs, verbose=verbose, batch_size=16, shuffle=True)
+
+        if virtual_inputs is not None:
+            scores = model.predict(virtual_inputs)[:, 0]
+        else:
+            virtual_inputs = np.identity(np.sum(~mask))
+            scores = np.ma.array(np.zeros(mask.shape[0]), mask=mask)
+            scores[~scores.mask] = model.predict(virtual_inputs)[:, 0]
+
     return scores
