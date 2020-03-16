@@ -1,13 +1,13 @@
-def ochiai(ep, np, ef, nf):
-    from numpy import sqrt
-    return ef/sqrt((ef+nf)*(ef+ep))
+import numpy as np
 
-def op2(ep, np, ef, nf):
-    return ef-ep/(ep+np+1)
+def ochiai(e_p, n_p, e_f, n_f):
+    return e_f/np.sqrt((e_f+n_f)*(e_f+e_p))
 
-def dstar(ep, np, ef, nf, star=2):
-    from numpy import power
-    return power(ef,star)/(ep+nf)
+def op2(e_p, n_p, e_f, n_f):
+    return e_f-e_p/(e_p+n_p+1)
 
-def tarantula(ep, np, ef, nf):
-    return (ef/(ef+nf))/((ef/(ef+nf))+(ep/(ep+np)))
+def dstar(e_p, n_p, e_f, n_f, star=2):
+    return np.power(e_f,star)/(e_p+n_f)
+
+def tarantula(e_p, n_p, e_f, n_f):
+    return (e_f/(e_f+n_f))/((e_f/(e_f+n_f))+(e_p/(e_p+n_p)))

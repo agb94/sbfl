@@ -4,7 +4,6 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-<<<<<<< bfc67a1bc066e220eb641400a2c21e3170b0a05e
     name="sbfl",
     version="0.0.1",
     author="Gabin An",

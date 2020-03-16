@@ -14,11 +14,13 @@ def matrix_to_index(X, y):
     assert np.all(X >= 0)
     assert np.all(np.isin(y, [0, 1]))
 
-    X_bt = np.transpose(binarize(X))
+    X = binarize(X)
     y = np.array(y)
-    ep = np.sum(X_bt & y, axis=1)
-    ef = np.sum(X_bt & (1 - y), axis=1)
-    return ep, np.sum(y) - ep, ef, np.sum(y) - ef
+    e_f = np.sum(X[y==0], axis=0)
+    n_f = np.sum(y == 0) - e_f
+    e_p = np.sum(X[y==1], axis=0)
+    n_p = np.sum(y == 1) - e_p
+    return e_p, n_p, e_f, n_f
 
 def simple_nn(input_dim, num_nodes=300):
     import keras
