@@ -11,3 +11,6 @@ def dstar(e_p, n_p, e_f, n_f, star=2):
 
 def tarantula(e_p, n_p, e_f, n_f):
     return (e_f/(e_f+n_f))/((e_f/(e_f+n_f))+(e_p/(e_p+n_p)))
+
+def jaccard(e_p, n_p, e_f, n_f):
+    return e_f/(e_f+n_f+e_p)
