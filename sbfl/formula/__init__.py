@@ -14,3 +14,6 @@ def tarantula(e_p, n_p, e_f, n_f):
 
 def jaccard(e_p, n_p, e_f, n_f):
     return e_f/(e_f+n_f+e_p)
+
+def gp13(e_p, n_p, e_f, n_f):
+    return e_f*(1 + 1/(2*e_p+e_f))
